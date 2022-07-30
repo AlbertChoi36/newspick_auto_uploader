@@ -6,6 +6,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import os
 from urllib.request import urlretrieve
@@ -48,35 +50,59 @@ class NewsPick:
         except:
             pass
 
+    def set_category(self, category):
+        self.driver.get('https://partners.newspic.kr/member/channel?ref=MAIN')
+        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, '//*[@id="cate1"]')))
+        for i in range(20):
+            this_cat = self.driver.find_element(By.XPATH, f'//*[@id="cate{i+1}"]')
+            checked = False
+            try:
+                if this_cat.get_attribute('checked'):
+                    checked = True
+            except:
+                pass
+            if ((i in category) and not checked) or ((i not in category) and checked):
+                this_cat.click()
+            #print(f'[{i+1}] {checked}')
+
+        done_btn = self.driver.find_element(By.CSS_SELECTOR, 'body > div.newspic-wrap.single-wrap > section > div.section-body.mt-60 > button')
+        done_btn.click()
+        time.sleep(0.2)
+
 
     def crawl_content_populer(self):
         self.driver.get('https://partners.newspic.kr/main/index')
-        time.sleep(4)
+
+        WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, f'//*[@id="profitNewsList"]/li[1]/div[1]/img')))
+        time.sleep(0.5)
 
         title_list, url_list, img_list = [], [], []
         next = self.driver.find_element(By.CSS_SELECTOR, '#swiper-next')
         for i in range(0, 5):
             for j in range(0, 4):
+                THUMBNAIL = self.driver.find_element(By.XPATH,
+                                                     f'//*[@id="profitNewsList"]/li[{i * 4 + j + 1}]/div[1]/img')
                 TITLE = self.driver.find_element(By.XPATH, f'//*[@id="profitNewsList"]/li[{i * 4 + j + 1}]/div[2]/a/span')
-                THUMBNAIL = self.driver.find_element(By.XPATH, f'//*[@id="profitNewsList"]/li[{i * 4 + j + 1}]/div[1]/img')
+
                 ActionChains(self.driver).move_to_element(THUMBNAIL).perform()
-                time.sleep(0.2)
-                button = self.driver.find_element(By.XPATH,
-                                             f'//*[@id="profitNewsList"]/li[{i * 4 + j + 1}]/div[1]/div[2]/ul/li[1]/button')
+                try:
+                    button = WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable((By.XPATH,
+                                             f'//*[@id="profitNewsList"]/li[{i * 4 + j + 1}]/div[1]/div[2]/ul/li[1]/button')))
+                except:
+                    continue
                 button.click()
                 time.sleep(0.5)
 
                 alert = self.driver.switch_to.alert
                 alert.accept()
                 URL = clipboard.paste()
-                time.sleep(0.5)
 
                 title_list.append(TITLE.text)
                 img_list.append(THUMBNAIL.get_attribute('src'))
                 url_list.append(URL)
-            if j < 3:
+            if j == 3 and i<4:
                 next.click()
-                time.sleep(3)
+                time.sleep(0.5)
 
         return title_list, url_list, img_list
 
