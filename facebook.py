@@ -29,6 +29,9 @@ class Facebook:
         input_email = self.driver.find_element(By.CSS_SELECTOR, '#email')
         input_pw = self.driver.find_element(By.CSS_SELECTOR, '#pass')
 
+        input_email.clear()
+        input_pw.clear()
+
         input_email.send_keys(self.ACCOUNT[0])
         input_pw.send_keys(self.ACCOUNT[1])
         input_pw.send_keys(Keys.ENTER)

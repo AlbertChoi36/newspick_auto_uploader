@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import clipboard
 import pyautogui as pg
 from datetime import date
+import datetime
 
 import news_pick as np
 import kakao_view as kv
@@ -58,72 +59,104 @@ def write_history(file, content_list):
         for content in content_list:
             f.write(content[0]+'\n')
 
-print('Please login with Kakao account')
-user, password = input('user: '), input('password: ')
-account = (user, password)
+def run(user, password):
+    account = (user, password)
 
-'''
-print('Please login with Facebook account')
-user, password = input('user: '), input('password: ')
-fb_account = (user, password)
-'''
-
-# driver
-dir_ChromeDriver = './chromedriver.exe'
-driver = webdriver.Chrome(service=Service(dir_ChromeDriver))
-
-# initialize
-my_newspick = np.NewsPick(driver, account)
-#my_kakaoview = kv.KakaoView(driver, account)
-
-#kakaoView.create_channel(generate_news_icon(), generate_channel_name(kakaoView), 'news'+str(random.randint(10000000000, 100000000000)), '매일 매일 새로운 뉴스!', category=(2, 1))
-#print(my_kakaoview.CHANNEL_LIST)
-'''
-#crawl
-title, url, image = my_newspick.crawl_content_populer()
-content = list(zip(title[:], url[:]))
-time.sleep(2)
-
-# kakaoview upload
-id_list = [x[1] for x in my_kakaoview.CHANNEL_LIST[:]]
-for id in id_list:
-    random.shuffle(content)
-    for t, u in content[:10]:
-        my_kakaoview.upload_by_url(t, u, id)
-
-# facebook upload
-random.shuffle(content)
-for t, u in content[:10]:
-    my_facebook.upload(t, u)
+    '''
+    print('Please login with Facebook account')
+    user, password = input('user: '), input('password: ')
+    fb_account = (user, password)
     '''
 
+    # driver
+    dir_ChromeDriver = './chromedriver.exe'
+    driver = webdriver.Chrome(service=Service(dir_ChromeDriver))
 
+    # initialize
+    my_newspick = np.NewsPick(driver, account)
+    # my_kakaoview = kv.KakaoView(driver, account)
 
-# login
-my_newspick.login()
-
-# crawl
-history = parse_history(f'C:/Users/admin/Desktop/newspick_history/{date.today()}.txt')
-print(history)
-content_list = []
-for i in [0, 1, 4, 10]:
-    my_newspick.set_category([i])
+    # kakaoView.create_channel(generate_news_icon(), generate_channel_name(kakaoView), 'news'+str(random.randint(10000000000, 100000000000)), '매일 매일 새로운 뉴스!', category=(2, 1))
+    # print(my_kakaoview.CHANNEL_LIST)
+    '''
+    #crawl
     title, url, image = my_newspick.crawl_content_populer()
-    if not title in history:
-        content_list.append(list(zip(title, url)))
-content_list = sum(content_list, [])
-random.shuffle(content_list)
-
-# upload on fb accounts
-fb_list = []
-for acc in parse_accounts('C:/Users/admin/Desktop/fb_accounts.txt')[0:1]:
-    my_fb = fb.Facebook(driver, acc)
-    fb_list.append(my_fb)
-    for content in content_list[:10]:
-        my_fb.upload(*content)
-    write_history(f'C:/Users/admin/Desktop/newspick_history/{date.today()}.txt', content_list[:10])
-    content_list = content_list[11:]
-
-    my_fb.logout()
+    content = list(zip(title[:], url[:]))
     time.sleep(2)
 
+    # kakaoview upload
+    id_list = [x[1] for x in my_kakaoview.CHANNEL_LIST[:]]
+    for id in id_list:
+        random.shuffle(content)
+        for t, u in content[:10]:
+            my_kakaoview.upload_by_url(t, u, id)
+
+    # facebook upload
+    random.shuffle(content)
+    for t, u in content[:10]:
+        my_facebook.upload(t, u)
+        '''
+
+    # login
+    my_newspick.login()
+
+    # crawl
+    history = []
+    for file in os.listdir('./newspick_history'):
+        history += parse_history(f'C:/Users/admin/Desktop/newspick_history/{file}')
+        print(file)
+    content_list = []
+    for i in [0, 1, 4, 10]:
+        my_newspick.set_category([i])
+        title, url, image = my_newspick.crawl_content_populer()
+        if not title in history:
+            content_list.append(list(zip(title, url)))
+    content_list = sum(content_list, [])
+    random.shuffle(content_list)
+
+    # upload on fb accounts
+    fb_list = []
+    for acc in parse_accounts('C:/Users/admin/Desktop/fb_accounts.txt')[0:1]:
+        print(f'Login Facebook as "{acc[0]}"')
+        try:
+            my_fb = fb.Facebook(driver, acc)
+            fb_list.append(my_fb)
+            for content in content_list[:10]:
+                my_fb.upload(*content)
+            write_history(f'./newspick_history/{date.today()}.txt', content_list[:10])
+            content_list = content_list[11:]
+        except:
+            print(f'EXCEPTION : something in wrong while uploading on facebook (account:{acc[0]})')
+
+        my_fb.logout()
+        time.sleep(2)
+
+    driver.quit()
+
+
+
+
+run_time = [(8, 00), (9, 00), (12, 00), (14, 00), (16, 00), (18, 00), (20, 00), (22, 00), (23, 0)]
+print('Please login with Kakao account')
+user, password = input('user: '), input('password: ')
+
+
+#initiate
+current_time = datetime.datetime.now()
+i=0
+for target in run_time:
+    if target[0] < int(current_time.hour) or (target[0]==int(current_time.hour) and target[1] <= int(current_time.minute)):
+        i+=1
+
+#start
+current_time = datetime.datetime.now()
+for target in run_time[i:]:
+    print(f'\nWaiting until {target[0]} : {target[1]}')
+    while(target[0] >= int(current_time.hour) and (target[0] != int(current_time.hour) or target[1] > int(current_time.minute))):
+        current_time = datetime.datetime.now()
+    print(f'Run at {target[0]} : {target[1]}')
+    print(current_time)
+    try:
+        run(user, password)
+    except:
+        print(f'EXCEPTION : failed to run')
