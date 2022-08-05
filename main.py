@@ -71,6 +71,7 @@ def run(user, password):
     # driver
     dir_ChromeDriver = './chromedriver.exe'
     driver = webdriver.Chrome(service=Service(dir_ChromeDriver))
+    driver.set_window_size(2160, 1080)
 
     # initialize
     my_newspick = np.NewsPick(driver, account)
@@ -116,15 +117,15 @@ def run(user, password):
 
     # upload on fb accounts
     fb_list = []
-    for acc in parse_accounts('C:/Users/admin/Desktop/fb_accounts.txt')[0:1]:
+    for acc in parse_accounts('C:/Users/timet/OneDrive/바탕 화면/fb_accounts.txt')[0:1]:
         print(f'Login Facebook as "{acc[0]}"')
         try:
             my_fb = fb.Facebook(driver, acc)
             fb_list.append(my_fb)
-            for content in content_list[:10]:
+            for content in content_list[:5]:
                 my_fb.upload(*content)
-            write_history(f'./newspick_history/{date.today()}.txt', content_list[:10])
-            content_list = content_list[11:]
+            write_history(f'./newspick_history/{date.today()}.txt', content_list[:5])
+            content_list = content_list[6:]
         except:
             print(f'EXCEPTION : something in wrong while uploading on facebook (account:{acc[0]})')
 
@@ -136,7 +137,7 @@ def run(user, password):
 
 
 
-run_time = [(8, 00), (9, 00), (12, 00), (14, 00), (16, 00), (18, 00), (20, 00), (22, 00), (23, 0)]
+run_time = [(2, 00), (4, 00), (6, 00), (8, 00), (10, 00), (12, 00), (14, 00), (16, 00), (18, 00), (20, 00), (22, 00), (24, 0)]
 print('Please login with Kakao account')
 user, password = input('user: '), input('password: ')
 
